@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Nouveau Dossier - Doctorant</title>
+</head>
+<body>
+<section>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentUserEmail = /*[[${#authentication.name}]]*/ 'test@test.com';
+        /*]]>*/
+    </script>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-modern p-5">
+                <div class="d-flex align-items-center mb-4">
+                    <a href="/ui/doctorant/dossiers" class="btn btn-light rounded-circle me-3"><i class="fa-solid fa-arrow-left"></i></a>
+                    <h4 class="fw-bold mb-0">Créer un Dossier d'Inscription</h4>
+                </div>
+
+                <div id="no-campagne-alert" class="alert alert-danger d-none rounded-3 border-0">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> Aucune campagne d'inscription n'est actuellement active. Vous ne pouvez pas déposer de dossier.
+                </div>
+
+                <form id="dossierForm" style="display: none;">
+                    <div class="mb-4 p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25">
+                        <h6 class="fw-bold text-primary mb-1"><i class="fa-solid fa-calendar-check me-2"></i>Campagne Active</h6>
+                        <span id="activeCampagneName" class="fw-medium text-dark">Chargement...</span>
+                        <input type="hidden" id="campagneId">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Directeur de Thèse</label>
+                        <select class="form-select bg-light form-select-lg" id="directeurId" required>
+                            <option value="">Sélectionnez un directeur...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Sujet de Thèse</label>
+                        <textarea class="form-control bg-light" id="sujetThese" rows="4" placeholder="Décrivez le sujet de votre thèse..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3 mt-2" id="submitBtn">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Soumettre le dossier
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDoctorantId = null;
+
+        async function initPage() {
+            try {
+                // 1. Vérifier si le doctorant existe
+                try {
+                    const doctorant = await apiCall(`/doctorants/email/${currentUserEmail}`);
+                    currentDoctorantId = doctorant.id;
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Profil incomplet',
+                        text: 'Vous devez compléter votre profil avant de créer un dossier.',
+                        confirmButtonText: 'Aller à mes dossiers'
+                    }).then(() => {
+                        window.location.href = '/ui/doctorant/dossiers';
+                    });
+                    return;
+                }
+
+                // 2. Vérifier la campagne active
+                try {
+                    const activeCampagne = await apiCall('/campagnes/active');
+                    document.getElementById('campagneId').value = activeCampagne.id;
+                    document.getElementById('activeCampagneName').innerText = `Année Universitaire ${activeCampagne.anneeUniv} (Date limite: ${activeCampagne.dateFermeture})`;
+                    document.getElementById('dossierForm').style.display = 'block';
+                } catch (error) {
+                    document.getElementById('no-campagne-alert').classList.remove('d-none');
+                    return;
+                }
+
+                // 3. Charger les directeurs
+                const directeurs = await apiCall('/directeurs');
+                const select = document.getElementById('directeurId');
+                directeurs.forEach(dir => {
+                    select.innerHTML += `<option value="${dir.id}">${dir.grade} - Département ${dir.departement} (ID: ${dir.id})</option>`;
+                });
+
+            } catch (error) {
+                console.error("Erreur d'initialisation", error);
+            }
+        }
+
+        document.getElementById('dossierForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Soumission en cours...';
+
+            const data = {
+                doctorantId: currentDoctorantId,
+                directeurId: parseInt(document.getElementById('directeurId').value),
+                campagneId: parseInt(document.getElementById('campagneId').value),
+                sujetThese: document.getElementById('sujetThese').value
+            };
+
+            try {
+                await apiCall('/dossiers', 'POST', data);
+                await Swal.fire({ icon: 'success', title: 'Dossier créé !', text: 'Votre dossier a été soumis avec succès.', showConfirmButton: false, timer: 2000 });
+                window.location.href = '/ui/doctorant/dossiers';
+            } catch (error) {
+                // Swal is handled in apiCall
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Soumettre le dossier';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</section>
+</body>
+</html>

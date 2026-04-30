@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Campagnes</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Gestion des Campagnes';</script>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="text-muted mb-0">Gérez les périodes d'inscription et de réinscription.</p>
+        </div>
+        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#campagneModal" onclick="resetForm()">
+            <i class="fa-solid fa-plus me-2"></i>Nouvelle Campagne
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Année Univ.</th>
+                    <th>Ouverture</th>
+                    <th>Fermeture</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="campagnes-table-body">
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Chargement...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="campagneModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Nouvelle Campagne</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="campagneForm">
+                        <input type="hidden" id="campagneId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-muted small text-uppercase">Année Universitaire</label>
+                            <input type="text" class="form-control form-control-lg bg-light" id="anneeUniv" placeholder="ex: 2023-2024" required>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-medium text-muted small text-uppercase">Ouverture</label>
+                                <input type="date" class="form-control bg-light" id="dateOuverture" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium text-muted small text-uppercase">Fermeture</label>
+                                <input type="date" class="form-control bg-light" id="dateFermeture" required>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" role="switch" id="active" style="width: 40px; height: 20px;">
+                            <label class="form-check-label ms-2 fw-medium mt-1" for="active">Marquer comme campagne active</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveCampagne()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = new bootstrap.Modal(document.getElementById('campagneModal'));
+
+        function resetForm() {
+            document.getElementById('campagneForm').reset();
+            document.getElementById('campagneId').value = '';
+            document.getElementById('modalTitle').innerText = 'Nouvelle Campagne';
+        }
+
+        async function loadCampagnes() {
+            try {
+                const campagnes = await apiCall('/campagnes');
+                const tbody = document.getElementById('campagnes-table-body');
+                tbody.innerHTML = '';
+                
+                if(campagnes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Aucune campagne trouvée.</td></tr>';
+                    return;
+                }
+
+                campagnes.forEach(c => {
+                    const statusBadge = c.active 
+                        ? `<span class="badge-custom badge-active"><i class="fa-solid fa-circle text-success fs-6 me-1" style="font-size: 8px !important;"></i> Active</span>` 
+                        : `<span class="badge-custom badge-inactive"><i class="fa-solid fa-circle text-danger fs-6 me-1" style="font-size: 8px !important;"></i> Clôturée</span>`;
+                    
+                    tbody.innerHTML += `
+                        <tr class="align-middle">
+                            <td class="fw-medium">${c.anneeUniv}</td>
+                            <td>${c.dateOuverture}</td>
+                            <td>${c.dateFermeture}</td>
+                            <td>${statusBadge}</td>
+                            <td class="text-end">
+                                ${!c.active ? `<button class="btn btn-sm btn-outline-success me-2" onclick="activerCampagne(${c.id})" title="Activer"><i class="fa-solid fa-check"></i></button>` : ''}
+                                <button class="btn btn-sm btn-light me-2 text-primary" onclick="editCampagne(${c.id})" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" onclick="deleteCampagne(${c.id})" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('campagnes-table-body').innerHTML = `<tr><td colspan="5" class="text-center text-danger">Erreur de chargement</td></tr>`;
+            }
+        }
+
+        async function saveCampagne() {
+            const id = document.getElementById('campagneId').value;
+            const data = {
+                anneeUniv: document.getElementById('anneeUniv').value,
+                dateOuverture: document.getElementById('dateOuverture').value,
+                dateFermeture: document.getElementById('dateFermeture').value,
+                active: document.getElementById('active').checked
+            };
+
+            if(!data.anneeUniv || !data.dateOuverture || !data.dateFermeture) {
+                Swal.fire('Attention', 'Veuillez remplir tous les champs requis', 'warning');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await apiCall(`/campagnes/${id}`, 'PUT', data);
+                    Swal.fire({icon: 'success', title: 'Mis à jour!', showConfirmButton: false, timer: 1500});
+                } else {
+                    await apiCall('/campagnes', 'POST', data);
+                    Swal.fire({icon: 'success', title: 'Créé!', showConfirmButton: false, timer: 1500});
+                }
+                modal.hide();
+                loadCampagnes();
+            } catch (e) {}
+        }
+
+        async function editCampagne(id) {
+            try {
+                const c = await apiCall(`/campagnes/${id}`);
+                document.getElementById('campagneId').value = c.id;
+                document.getElementById('anneeUniv').value = c.anneeUniv;
+                document.getElementById('dateOuverture').value = c.dateOuverture;
+                document.getElementById('dateFermeture').value = c.dateFermeture;
+                document.getElementById('active').checked = c.active;
+                document.getElementById('modalTitle').innerText = 'Modifier Campagne';
+                modal.show();
+            } catch (e) {}
+        }
+
+        async function deleteCampagne(id) {
+            const result = await Swal.fire({
+                title: 'Êtes-vous sûr?',
+                text: "Cette action est irréversible!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Oui, supprimer'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await apiCall(`/campagnes/${id}`, 'DELETE');
+                    Swal.fire({icon: 'success', title: 'Supprimé!', showConfirmButton: false, timer: 1500});
+                    loadCampagnes();
+                } catch (e) {}
+            }
+        }
+
+        async function activerCampagne(id) {
+            try {
+                await apiCall(`/campagnes/${id}/activer`, 'POST');
+                Swal.fire({icon: 'success', title: 'Campagne activée!', showConfirmButton: false, timer: 1500});
+                loadCampagnes();
+            } catch (e) {}
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', loadCampagnes);
+    </script>
+</section>
+</body>
+</html>

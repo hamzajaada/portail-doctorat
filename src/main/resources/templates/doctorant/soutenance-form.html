@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Demande de Soutenance</title>
+</head>
+<body>
+<section>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentUserEmail = /*[[${#authentication.name}]]*/ 'test@test.com';
+        /*]]>*/
+    </script>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-modern p-5">
+                <h4 class="fw-bold mb-4">Demande d'Autorisation de Soutenance</h4>
+                <p class="text-muted mb-4">Remplissez ce formulaire pour initier la procédure de soutenance. Attention, des prérequis stricts sont exigés (Publications, Conférences, Heures de formation).</p>
+
+                <form id="soutenanceForm">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Publications</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-book"></i></span>
+                                <input type="number" class="form-control bg-light border-start-0" id="nbPublications" value="0" min="0" required>
+                            </div>
+                            <small class="text-danger" style="font-size: 0.7rem;">Minimum requis : 2</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Conférences</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-microphone"></i></span>
+                                <input type="number" class="form-control bg-light border-start-0" id="nbConferences" value="0" min="0" required>
+                            </div>
+                            <small class="text-danger" style="font-size: 0.7rem;">Minimum requis : 2</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Heures de formation</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-clock"></i></span>
+                                <input type="number" class="form-control bg-light border-start-0" id="heuresFormation" value="0" min="0" required>
+                            </div>
+                            <small class="text-danger" style="font-size: 0.7rem;">Minimum requis : 200h</small>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25 my-4">
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Date souhaitée</label>
+                            <input type="datetime-local" class="form-control bg-light" id="dateSoutenance" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Lieu suggéré</label>
+                            <input type="text" class="form-control bg-light" id="lieuSoutenance" placeholder="Ex: Amphi A, Faculté des Sciences" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3" id="submitBtn">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Soumettre la demande
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDoctorantId = null;
+
+        async function initPage() {
+            try {
+                const doctorant = await apiCall(`/doctorants/email/${currentUserEmail}`);
+                currentDoctorantId = doctorant.id;
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erreur',
+                    text: 'Profil doctorant introuvable.'
+                });
+                document.getElementById('submitBtn').disabled = true;
+            }
+        }
+
+        document.getElementById('soutenanceForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = 'Vérification et Soumission...';
+
+            const data = {
+                doctorantId: currentDoctorantId,
+                nbPublications: parseInt(document.getElementById('nbPublications').value),
+                nbConferences: parseInt(document.getElementById('nbConferences').value),
+                heuresFormation: parseInt(document.getElementById('heuresFormation').value),
+                dateSoutenance: document.getElementById('dateSoutenance').value,
+                lieuSoutenance: document.getElementById('lieuSoutenance').value
+            };
+
+            try {
+                // Le backend s'occupe de la validation des prérequis via DemandeSoutenanceService.create
+                await apiCall('/demandes-soutenance', 'POST', data);
+                await Swal.fire({ icon: 'success', title: 'Demande envoyée !', text: 'Votre demande de soutenance a été soumise avec succès au comité.', showConfirmButton: true});
+                window.location.href = '/ui/dashboard';
+            } catch (error) {
+                // Si l'erreur vient des prérequis, l'exception est déjà affichée par Swal dans apiCall
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> Soumettre la demande';
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</section>
+</body>
+</html>

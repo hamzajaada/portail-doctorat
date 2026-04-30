@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Détails du Dossier</title>
+</head>
+<body>
+<section>
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/directeur/dossiers}" class="btn btn-light border me-3"><i class="fa-solid fa-arrow-left"></i> Retour</a>
+        <h4 class="fw-bold m-0" th:text="'Dossier de ' + ${dossier.doctorant.user.nom} + ' ' + ${dossier.doctorant.user.prenom}"></h4>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-7">
+            <div class="card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Informations Générales</h5>
+                <p><strong>Campagne :</strong> <span th:text="${dossier.campagne.anneeUniv}"></span></p>
+                <p><strong>Statut :</strong> <span class="badge bg-primary" th:text="${dossier.statut.name()}"></span></p>
+                <p><strong>Sujet :</strong></p>
+                <p class="text-muted border rounded p-3 bg-light" th:text="${dossier.sujetThese}"></p>
+            </div>
+
+            <div class="card-modern p-4">
+                <h5 class="fw-bold mb-3 border-bottom pb-2">Documents attachés</h5>
+                <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(documents)}">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0" th:each="doc : ${documents}">
+                        <div>
+                            <span class="fw-semibold" th:text="${doc.typeDocument}"></span>
+                            <br><small class="text-muted" th:text="${doc.nomFichier}"></small>
+                        </div>
+                        <a th:href="@{'/fichiers/' + ${doc.cheminFichier}}" target="_blank" class="btn btn-sm btn-outline-primary">Télécharger</a>
+                    </li>
+                </ul>
+                <p class="text-muted mt-2" th:if="${#lists.isEmpty(documents)}">Aucun document joint.</p>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card-modern p-4" th:if="${dossier.statut.name() == 'SOUMIS'}">
+                <h5 class="fw-bold mb-3">Action requise</h5>
+                
+                <form th:action="@{'/directeur/dossiers/' + ${dossier.oid} + '/valider'}" method="post" class="mb-4">
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-semibold">Avis Favorable (Optionnel)</label>
+                        <textarea name="avis" class="form-control" rows="3" placeholder="Saisir un avis..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Valider ce dossier</button>
+                </form>
+
+                <hr class="text-muted">
+
+                <form th:action="@{'/directeur/dossiers/' + ${dossier.oid} + '/rejeter'}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label text-muted fw-semibold">Motif du rejet (Obligatoire)</label>
+                        <textarea name="motif" class="form-control" rows="3" required placeholder="Expliquez pourquoi le dossier est rejeté..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-outline-danger w-100">Rejeter le dossier</button>
+                </form>
+            </div>
+
+            <div class="card-modern p-4 bg-light" th:unless="${dossier.statut.name() == 'SOUMIS'}">
+                <h5 class="fw-bold mb-0 text-center text-muted">Le dossier a déjà été traité.</h5>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Utilisateurs - Administration</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Gestion des Utilisateurs';</script>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="text-muted mb-0">Administrez l'accès au portail pour tous les rôles.</p>
+        </div>
+        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#userModal" onclick="resetForm()">
+            <i class="fa-solid fa-user-plus me-2"></i>Nouvel Utilisateur
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nom & Prénom</th>
+                    <th>Email</th>
+                    <th>Rôle</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body">
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Chargement...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalTitle">Nouvel Utilisateur</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="userForm">
+                        <input type="hidden" id="userId">
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label fw-medium text-muted small text-uppercase">Nom</label>
+                                <input type="text" class="form-control bg-light" id="nom" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fw-medium text-muted small text-uppercase">Prénom</label>
+                                <input type="text" class="form-control bg-light" id="prenom" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-muted small text-uppercase">Email</label>
+                            <input type="email" class="form-control bg-light" id="email" required>
+                        </div>
+                        
+                        <div class="mb-3" id="passwordGroup">
+                            <label class="form-label fw-medium text-muted small text-uppercase">Mot de passe</label>
+                            <input type="password" class="form-control bg-light" id="password">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-muted small text-uppercase">Rôle</label>
+                            <select class="form-select bg-light" id="role" required>
+                                <option value="DOCTORANT">Doctorant</option>
+                                <option value="DIRECTEUR">Directeur de thèse</option>
+                                <option value="ADMIN">Administrateur</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary-custom" onclick="saveUser()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modal = new bootstrap.Modal(document.getElementById('userModal'));
+
+        function resetForm() {
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('passwordGroup').style.display = 'block';
+            document.getElementById('modalTitle').innerText = 'Nouvel Utilisateur';
+        }
+
+        function getRoleBadge(role) {
+            switch(role) {
+                case 'ADMIN': return `<span class="badge-custom" style="background:#4f46e5; color:white;">Admin</span>`;
+                case 'DIRECTEUR': return `<span class="badge-custom" style="background:#0891b2; color:white;">Directeur</span>`;
+                case 'DOCTORANT': return `<span class="badge-custom" style="background:#059669; color:white;">Doctorant</span>`;
+                default: return `<span class="badge-custom bg-secondary text-white">${role}</span>`;
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await apiCall('/users');
+                const tbody = document.getElementById('users-table-body');
+                tbody.innerHTML = '';
+                
+                if(!users || users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Aucun utilisateur trouvé.</td></tr>';
+                    return;
+                }
+
+                users.forEach(u => {
+                    tbody.innerHTML += `
+                        <tr class="align-middle">
+                            <td class="fw-medium">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 35px; height: 35px;">
+                                        ${u.prenom.charAt(0)}${u.nom.charAt(0)}
+                                    </div>
+                                    ${u.nom} ${u.prenom}
+                                </div>
+                            </td>
+                            <td>${u.email}</td>
+                            <td>${getRoleBadge(u.role)}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-light me-2 text-primary" onclick="editUser(${u.id})" title="Modifier"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn btn-sm btn-light text-danger" onclick="deleteUser(${u.id})" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('users-table-body').innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erreur de chargement</td></tr>`;
+            }
+        }
+
+        async function saveUser() {
+            const id = document.getElementById('userId').value;
+            const data = {
+                nom: document.getElementById('nom').value,
+                prenom: document.getElementById('prenom').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+
+            if(!data.nom || !data.prenom || !data.email || !data.role) {
+                Swal.fire('Attention', 'Veuillez remplir tous les champs requis', 'warning');
+                return;
+            }
+
+            try {
+                if (id) {
+                    await apiCall(`/users/${id}`, 'PUT', data);
+                    Swal.fire({icon: 'success', title: 'Mis à jour!', showConfirmButton: false, timer: 1500});
+                } else {
+                    if(!data.password) {
+                        Swal.fire('Attention', 'Le mot de passe est requis pour la création', 'warning');
+                        return;
+                    }
+                    await apiCall('/users', 'POST', data);
+                    Swal.fire({icon: 'success', title: 'Créé!', showConfirmButton: false, timer: 1500});
+                }
+                modal.hide();
+                loadUsers();
+            } catch (e) {}
+        }
+
+        async function editUser(id) {
+            try {
+                const u = await apiCall(`/users/${id}`);
+                document.getElementById('userId').value = u.id;
+                document.getElementById('nom').value = u.nom;
+                document.getElementById('prenom').value = u.prenom;
+                document.getElementById('email').value = u.email;
+                document.getElementById('role').value = u.role;
+                document.getElementById('passwordGroup').style.display = 'none'; // Pas de changement de mot de passe direct ici
+                document.getElementById('modalTitle').innerText = 'Modifier Utilisateur';
+                modal.show();
+            } catch (e) {}
+        }
+
+        async function deleteUser(id) {
+            const result = await Swal.fire({
+                title: 'Supprimer cet utilisateur?',
+                text: "Tous les profils doctorant/directeur associés seront également supprimés !",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Supprimer'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await apiCall(`/users/${id}`, 'DELETE');
+                    Swal.fire({icon: 'success', title: 'Supprimé!', showConfirmButton: false, timer: 1500});
+                    loadUsers();
+                } catch (e) {}
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</section>
+</body>
+</html>

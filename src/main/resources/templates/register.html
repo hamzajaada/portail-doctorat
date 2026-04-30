@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Portail Doctorat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px;}
+        .login-card { background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); width: 100%; max-width: 500px; padding: 40px; }
+        .btn-primary-custom { background: #4f46e5; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; width: 100%; transition: all 0.2s; }
+        .btn-primary-custom:hover { background: #4338ca; transform: translateY(-1px); color: white;}
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-dark">Créer un compte</h3>
+        <p class="text-muted small">Rejoignez le portail de gestion de doctorat</p>
+    </div>
+
+    <form action="/register" method="POST">
+        <div class="row mb-3">
+            <div class="col-6">
+                <label class="form-label text-muted small fw-bold text-uppercase">Nom</label>
+                <input type="text" name="nom" class="form-control bg-light" required>
+            </div>
+            <div class="col-6">
+                <label class="form-label text-muted small fw-bold text-uppercase">Prénom</label>
+                <input type="text" name="prenom" class="form-control bg-light" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-muted small fw-bold text-uppercase">Email</label>
+            <input type="email" name="email" class="form-control bg-light" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label text-muted small fw-bold text-uppercase">Mot de passe</label>
+            <input type="password" name="password" class="form-control bg-light" required minlength="6">
+        </div>
+
+        <button type="submit" class="btn btn-primary-custom mb-3">S'inscrire</button>
+    </form>
+
+    <div class="text-center mt-4">
+        <p class="text-muted small mb-0">Déjà inscrit ? <a href="/login" class="text-decoration-none fw-bold" style="color: #4f46e5;">Se connecter</a></p>
+    </div>
+</div>
+
+</body>
+</html>

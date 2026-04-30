@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Nouvelle Inscription</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Dossier d\'Inscription';</script>
+
+    <div class="card-modern p-4 max-w-lg mx-auto">
+        <h4 class="fw-bold mb-4">Saisir les informations du dossier</h4>
+        
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+        <form th:action="@{/doctorant/inscription/nouvelle}" th:object="${dossier}" method="post">
+            <input type="hidden" th:field="*{campagneId}" />
+            
+            <div class="mb-3">
+                <label class="form-label text-muted fw-semibold">Campagne active</label>
+                <input type="text" class="form-control" th:value="${campagne.anneeUniv}" readonly disabled />
+            </div>
+
+            <div class="mb-3">
+                <label for="directeurId" class="form-label text-muted fw-semibold">Directeur de Thèse</label>
+                <select id="directeurId" class="form-select" th:field="*{directeurId}">
+                    <option value="">Sélectionnez un directeur</option>
+                    <option th:each="dir : ${directeurs}" th:value="${dir.oid}" th:text="${dir.user.nom + ' ' + dir.user.prenom + ' - ' + dir.departement}"></option>
+                </select>
+                <div class="text-danger small mt-1" th:if="${#fields.hasErrors('directeurId')}" th:errors="*{directeurId}"></div>
+            </div>
+
+            <div class="mb-4">
+                <label for="sujetThese" class="form-label text-muted fw-semibold">Sujet de Thèse</label>
+                <textarea id="sujetThese" class="form-control" rows="4" th:field="*{sujetThese}" placeholder="Décrivez votre sujet de thèse en quelques mots..."></textarea>
+                <div class="text-danger small mt-1" th:if="${#fields.hasErrors('sujetThese')}" th:errors="*{sujetThese}"></div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a th:href="@{/doctorant/dashboard}" class="btn btn-outline-secondary">Annuler</a>
+                <button type="submit" class="btn btn-primary">Enregistrer (Brouillon) et Suivant</button>
+            </div>
+        </form>
+    </div>
+</section>
+</body>
+</html>

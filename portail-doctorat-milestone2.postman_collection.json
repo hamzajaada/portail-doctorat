@@ -1,0 +1,187 @@
+{
+  "info": {
+    "name": "Portail Doctorat - Milestone 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "username", "value": "admin@portail.ma", "type": "text"},
+                {"key": "password", "value": "admin123", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8082/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Campagnes",
+      "item": [
+        {
+          "name": "Liste Campagnes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/admin/campagnes",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["admin", "campagnes"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Active Campagne",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/admin/campagnes/1/toggle",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["admin", "campagnes", "1", "toggle"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doctorant - Inscription",
+      "item": [
+        {
+          "name": "Soumettre Nouveau Dossier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "campagneId", "value": "1", "type": "text"},
+                {"key": "directeurId", "value": "1", "type": "text"},
+                {"key": "sujetThese", "value": "Recherche avancée IA", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8082/doctorant/inscription/nouvelle",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["doctorant", "inscription", "nouvelle"]
+            }
+          }
+        },
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "typeDocument", "value": "CIN", "type": "text"},
+                {"key": "fichier", "type": "file", "src": ""}
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8082/doctorant/inscription/1/documents",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["doctorant", "inscription", "1", "documents"]
+            }
+          }
+        },
+        {
+          "name": "Finaliser Soumission",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/doctorant/inscription/1/soumettre",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["doctorant", "inscription", "1", "soumettre"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Directeur - Validation",
+      "item": [
+        {
+          "name": "Liste Dossiers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/directeur/dossiers",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["directeur", "dossiers"]
+            }
+          }
+        },
+        {
+          "name": "Valider Dossier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "avis", "value": "Très bon projet.", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8082/directeur/dossiers/1/valider",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["directeur", "dossiers", "1", "valider"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Dossiers",
+      "item": [
+        {
+          "name": "Valider Définitivement",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/admin/dossiers/1/valider",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8082",
+              "path": ["admin", "dossiers", "1", "valider"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

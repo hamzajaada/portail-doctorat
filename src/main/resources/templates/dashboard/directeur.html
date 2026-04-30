@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Dashboard Directeur de Thèse';</script>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Doctorants Actifs</p>
+                        <h3 class="fw-bold mb-0" id="count-doctorants">--</h3>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-user-graduate fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Dossiers en Attente</p>
+                        <h3 class="fw-bold mb-0 text-warning" id="count-dossiers">--</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-folder-open fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Campagne Active</p>
+                        <h4 class="fw-bold mb-0 text-success" id="active-campagne-annee">Aucune</h4>
+                    </div>
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-calendar-check fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card-modern p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">Demandes Soutenance</p>
+                        <h3 class="fw-bold mb-0 text-info" id="count-soutenances">--</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-gavel fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card-modern p-4 h-100">
+                <h5 class="fw-bold mb-4">Aperçu du système</h5>
+                <div class="text-center text-muted p-5">
+                    <i class="fa-solid fa-chart-line fs-1 mb-3 opacity-50"></i>
+                    <p>Le module de statistiques avancées est en cours de construction.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-modern p-4 h-100">
+                <h5 class="fw-bold mb-4">Actions Rapides</h5>
+                <div class="d-grid gap-3">
+                    <a href="/ui/admin/campagnes" class="btn btn-outline-primary text-start p-3 rounded-3 d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3"><i class="fa-solid fa-plus"></i></div>
+                        <div>
+                            <div class="fw-bold">Nouvelle Campagne</div>
+                            <small class="text-muted">Ouvrir les inscriptions</small>
+                        </div>
+                    </a>
+                    <a href="/ui/admin/dossiers" class="btn btn-outline-success text-start p-3 rounded-3 d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3"><i class="fa-solid fa-check-double"></i></div>
+                        <div>
+                            <div class="fw-bold">Valider Dossiers</div>
+                            <small class="text-muted">Gérer les demandes</small>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch dashboard data on load
+        async function loadDashboardData() {
+            try {
+                const doctorants = await apiCall('/doctorants');
+                document.getElementById('count-doctorants').innerText = doctorants.length;
+
+                const dossiers = await apiCall('/dossiers');
+                document.getElementById('count-dossiers').innerText = dossiers.length;
+
+                const soutenances = await apiCall('/demandes-soutenance');
+                document.getElementById('count-soutenances').innerText = soutenances.length;
+
+                try {
+                    const activeCampagne = await apiCall('/campagnes/active');
+                    if (activeCampagne) {
+                        document.getElementById('active-campagne-annee').innerText = activeCampagne.anneeUniv;
+                    }
+                } catch(e) {
+                    // Ignorer si aucune campagne active
+                }
+
+            } catch (error) {
+                console.error("Erreur de chargement du dashboard", error);
+            }
+        }
+        
+        loadDashboardData();
+    </script>
+</section>
+</body>
+</html>

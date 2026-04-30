@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Tous les Dossiers</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Gestion des Dossiers';</script>
+
+    <div class="card-modern p-4">
+        <h5 class="fw-bold mb-4">Liste complète des dossiers</h5>
+
+        <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Doctorant</th>
+                        <th>Directeur</th>
+                        <th>Campagne</th>
+                        <th>Sujet</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(dossiers)}">
+                        <td colspan="6" class="text-center text-muted py-4">Aucun dossier trouvé.</td>
+                    </tr>
+                    <tr th:each="dossier : ${dossiers}">
+                        <td class="fw-semibold" th:text="${dossier.doctorant.user.nom + ' ' + dossier.doctorant.user.prenom}"></td>
+                        <td th:text="${dossier.directeur.user.nom + ' ' + dossier.directeur.user.prenom}"></td>
+                        <td th:text="${dossier.campagne.anneeUniv}"></td>
+                        <td th:text="${#strings.abbreviate(dossier.sujetThese, 40)}"></td>
+                        <td>
+                            <span class="badge bg-secondary" th:if="${dossier.statut.name() == 'BROUILLON'}">BROUILLON</span>
+                            <span class="badge bg-warning" th:if="${dossier.statut.name() == 'SOUMIS'}">SOUMIS</span>
+                            <span class="badge bg-info" th:if="${dossier.statut.name() == 'VALIDE_DIRECTEUR'}">VAL. DIRECTEUR</span>
+                            <span class="badge bg-success" th:if="${dossier.statut.name() == 'VALIDE_ADMIN'}">VAL. ADMIN</span>
+                            <span class="badge bg-danger" th:if="${dossier.statut.name() == 'REJETE'}">REJETÉ</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{'/admin/dossiers/' + ${dossier.oid}}" class="btn btn-sm btn-outline-primary">Détails</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

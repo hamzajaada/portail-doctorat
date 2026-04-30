@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Mon Dashboard Doctorant</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Mon Espace Doctorant';</script>
+
+    <!-- Alertes -->
+    <div th:if="${alerte6ans}" class="alert alert-danger" role="alert">
+        <strong>Alerte :</strong> Vous avez dépassé 5 ans et 6 mois depuis votre première inscription. Veuillez contacter la direction de thèse en urgence.
+    </div>
+    <div th:if="${alerte3ans}" class="alert alert-warning" role="alert">
+        <strong>Attention :</strong> Vous approchez de la limite des 3 ans de votre première inscription.
+    </div>
+
+    <!-- Message Flash -->
+    <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+    <div class="row g-4">
+        <!-- Mon Dossier en cours -->
+        <div class="col-md-8">
+            <div class="card-modern p-4 mb-4">
+                <h4 class="fw-bold mb-4">Mes Dossiers d'Inscription</h4>
+                
+                <div th:if="${#lists.isEmpty(dossiers)}">
+                    <p class="text-muted">Vous n'avez aucun dossier d'inscription en cours.</p>
+                    <a th:if="${canCreateDossier}" th:href="@{/doctorant/inscription/nouvelle}" class="btn btn-primary">Nouvelle Inscription</a>
+                </div>
+                
+                <div th:unless="${#lists.isEmpty(dossiers)}" th:each="dossier : ${dossiers}" class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="fw-bold m-0" th:text="${dossier.campagne.anneeUniv}"></h5>
+                        <span class="badge bg-primary" th:text="${dossier.statut.name()}"></span>
+                    </div>
+                    <p class="mb-1"><strong>Sujet :</strong> <span th:text="${dossier.sujetThese}"></span></p>
+                    <p class="mb-2"><strong>Directeur :</strong> <span th:text="${dossier.directeur.user.nom + ' ' + dossier.directeur.user.prenom}"></span></p>
+                    
+                    <a th:if="${dossier.statut.name() == 'BROUILLON'}" th:href="@{'/doctorant/inscription/' + ${dossier.oid} + '/documents'}" class="btn btn-sm btn-outline-primary">Gérer les documents et soumettre</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="col-md-4">
+            <div class="card-modern p-4">
+                <h5 class="fw-bold mb-3">Notifications</h5>
+                <div th:if="${#lists.isEmpty(notifications)}">
+                    <p class="text-muted mb-0">Aucune nouvelle notification.</p>
+                </div>
+                <div th:unless="${#lists.isEmpty(notifications)}">
+                    <div th:each="notif : ${notifications}" class="alert alert-info py-2 px-3 mb-2">
+                        <small class="text-muted d-block" th:text="${#temporals.format(notif.dateCreation, 'dd/MM/yyyy HH:mm')}"></small>
+                        <span th:text="${notif.message}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

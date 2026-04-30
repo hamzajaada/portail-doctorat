@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Dossiers d'Inscription</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Dossiers d\'Inscription';</script>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="text-muted mb-0">Suivez et validez les dossiers d'inscription des doctorants.</p>
+        </div>
+        <!-- Pour l'instant, la création de dossier est gérée via API / côté doctorant -->
+    </div>
+
+    <div class="table-container">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Doctorant ID</th>
+                    <th>Directeur ID</th>
+                    <th>Campagne ID</th>
+                    <th>Sujet de Thèse</th>
+                    <th>Statut</th>
+                    <th>Date Dépôt</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="dossiers-table-body">
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Chargement...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function getStatutBadge(statut) {
+            switch(statut) {
+                case 'BROUILLON': return `<span class="badge-custom badge-brouillon"><i class="fa-solid fa-pen fs-6 me-1" style="font-size: 8px !important;"></i> Brouillon</span>`;
+                case 'SOUMIS': return `<span class="badge-custom badge-soumis"><i class="fa-solid fa-paper-plane fs-6 me-1" style="font-size: 8px !important;"></i> Soumis</span>`;
+                case 'VALIDE': return `<span class="badge-custom badge-active"><i class="fa-solid fa-check fs-6 me-1" style="font-size: 8px !important;"></i> Validé</span>`;
+                case 'REJETE': return `<span class="badge-custom badge-inactive"><i class="fa-solid fa-xmark fs-6 me-1" style="font-size: 8px !important;"></i> Rejeté</span>`;
+                default: return `<span class="badge-custom badge-brouillon">${statut}</span>`;
+            }
+        }
+
+        async function loadDossiers() {
+            try {
+                const dossiers = await apiCall('/dossiers');
+                const tbody = document.getElementById('dossiers-table-body');
+                tbody.innerHTML = '';
+                
+                if(!dossiers || dossiers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Aucun dossier trouvé.</td></tr>';
+                    return;
+                }
+
+                dossiers.forEach(d => {
+                    const dateFmt = d.dateDepot ? new Date(d.dateDepot).toLocaleDateString('fr-FR') : '-';
+                    tbody.innerHTML += `
+                        <tr class="align-middle">
+                            <td class="fw-medium">#${d.doctorantId || '?'}</td>
+                            <td>#${d.directeurId || '?'}</td>
+                            <td>${d.campagneId || '?'}</td>
+                            <td class="text-truncate" style="max-width: 200px;" title="${d.sujetThese || ''}">${d.sujetThese || '-'}</td>
+                            <td>${getStatutBadge(d.statut)}</td>
+                            <td>${dateFmt}</td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light dropdown-toggle text-primary" type="button" data-bs-toggle="dropdown">
+                                        Action
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                        <li><a class="dropdown-item" href="#" onclick="changerStatut(${d.id}, 'SOUMIS')"><i class="fa-solid fa-paper-plane me-2 text-primary"></i> Soumettre</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="changerStatut(${d.id}, 'VALIDE')"><i class="fa-solid fa-check me-2 text-success"></i> Valider</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="changerStatut(${d.id}, 'REJETE')"><i class="fa-solid fa-xmark me-2 text-danger"></i> Rejeter</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteDossier(${d.id})"><i class="fa-solid fa-trash me-2"></i> Supprimer</a></li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('dossiers-table-body').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Erreur de chargement</td></tr>`;
+            }
+        }
+
+        async function changerStatut(id, statut) {
+            try {
+                // L'API attend: PUT /api/dossiers/{id}/statut?statut=XYZ
+                await apiCall(`/dossiers/${id}/statut?statut=${statut}`, 'PUT');
+                Swal.fire({icon: 'success', title: 'Statut mis à jour', showConfirmButton: false, timer: 1500});
+                loadDossiers();
+            } catch (e) {}
+        }
+
+        async function deleteDossier(id) {
+            const result = await Swal.fire({
+                title: 'Supprimer ce dossier?',
+                text: "Cette action est irréversible!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Supprimer'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await apiCall(`/dossiers/${id}`, 'DELETE');
+                    Swal.fire({icon: 'success', title: 'Supprimé!', showConfirmButton: false, timer: 1500});
+                    loadDossiers();
+                } catch (e) {}
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', loadDossiers);
+    </script>
+</section>
+</body>
+</html>

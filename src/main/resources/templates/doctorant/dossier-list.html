@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Mes Dossiers - Doctorant</title>
+</head>
+<body>
+<section>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentUserEmail = /*[[${#authentication.name}]]*/ 'test@test.com';
+        /*]]>*/
+    </script>
+    
+    <script>document.getElementById('page-title').innerText = 'Mes Dossiers d\'Inscription';</script>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <p class="text-muted mb-0">Consultez l'état de vos réinscriptions et dossiers en cours.</p>
+        </div>
+        <a href="/ui/doctorant/dossiers/nouveau" class="btn btn-primary-custom" id="btn-nouveau-dossier" style="display: none;">
+            <i class="fa-solid fa-plus me-2"></i>Nouveau Dossier
+        </a>
+    </div>
+
+    <!-- Alert si pas de profil doctorant -->
+    <div id="no-profile-alert" class="alert alert-warning d-none shadow-sm border-0 rounded-4 p-4 mb-4">
+        <h5 class="fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Profil incomplet</h5>
+        <p>Vous n'avez pas encore finalisé votre profil de doctorant. Vous devez le compléter pour pouvoir créer un dossier d'inscription.</p>
+        <button class="btn btn-warning fw-bold mt-2" data-bs-toggle="modal" data-bs-target="#profilModal">Compléter mon profil</button>
+    </div>
+
+    <div class="table-container" id="dossiers-container" style="display: none;">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Campagne</th>
+                    <th>Sujet de Thèse</th>
+                    <th>Statut</th>
+                    <th>Date Dépôt</th>
+                </tr>
+            </thead>
+            <tbody id="dossiers-table-body">
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Chargement...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal Compléter Profil -->
+    <div class="modal fade" id="profilModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">Compléter mon Profil</h5>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="profilForm">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">CNE / Massar</label>
+                            <input type="text" id="cne" class="form-control bg-light" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label text-muted small fw-bold text-uppercase">Année de thèse</label>
+                                <input type="number" id="anneeThese" class="form-control bg-light" min="1" max="6" value="1" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-muted small fw-bold text-uppercase">1ère inscription</label>
+                                <input type="date" id="datePremiereInscription" class="form-control bg-light" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-primary-custom w-100" onclick="saveProfil()">Enregistrer mon profil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDoctorantId = null;
+
+        function getStatutBadge(statut) {
+            switch(statut) {
+                case 'BROUILLON': return `<span class="badge-custom badge-brouillon">Brouillon</span>`;
+                case 'SOUMIS': return `<span class="badge-custom badge-soumis">Soumis</span>`;
+                case 'VALIDE': return `<span class="badge-custom badge-active">Validé</span>`;
+                case 'REJETE': return `<span class="badge-custom badge-inactive">Rejeté</span>`;
+                default: return `<span class="badge-custom badge-brouillon">${statut}</span>`;
+            }
+        }
+
+        async function initPage() {
+            try {
+                // 1. Vérifier si le doctorant existe
+                try {
+                    const doctorant = await apiCall(`/doctorants/email/${currentUserEmail}`);
+                    currentDoctorantId = doctorant.id;
+                    document.getElementById('no-profile-alert').classList.add('d-none');
+                    document.getElementById('dossiers-container').style.display = 'block';
+                    document.getElementById('btn-nouveau-dossier').style.display = 'inline-block';
+                    loadDossiers();
+                } catch (error) {
+                    // Doctorant non trouvé -> afficher le warning
+                    document.getElementById('no-profile-alert').classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error("Erreur d'initialisation", error);
+            }
+        }
+
+        async function saveProfil() {
+            const data = {
+                userEmail: currentUserEmail,
+                cne: document.getElementById('cne').value,
+                anneeThese: parseInt(document.getElementById('anneeThese').value),
+                datePremiereInscription: document.getElementById('datePremiereInscription').value
+            };
+            try {
+                await apiCall('/doctorants', 'POST', data);
+                Swal.fire({icon: 'success', title: 'Profil enregistré', showConfirmButton: false, timer: 1500});
+                const modal = bootstrap.Modal.getInstance(document.getElementById('profilModal'));
+                modal.hide();
+                initPage();
+            } catch (e) {}
+        }
+
+        async function loadDossiers() {
+            if(!currentDoctorantId) return;
+            try {
+                const dossiers = await apiCall(`/dossiers/doctorant/${currentDoctorantId}`);
+                const tbody = document.getElementById('dossiers-table-body');
+                tbody.innerHTML = '';
+                
+                if(!dossiers || dossiers.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Vous n\'avez aucun dossier.</td></tr>';
+                    return;
+                }
+
+                dossiers.forEach(d => {
+                    const dateFmt = d.dateDepot ? new Date(d.dateDepot).toLocaleDateString('fr-FR') : '-';
+                    tbody.innerHTML += `
+                        <tr class="align-middle">
+                            <td class="fw-medium">Campagne #${d.campagneId}</td>
+                            <td class="text-truncate" style="max-width: 250px;">${d.sujetThese || '-'}</td>
+                            <td>${getStatutBadge(d.statut)}</td>
+                            <td>${dateFmt}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                document.getElementById('dossiers-table-body').innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erreur de chargement</td></tr>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</section>
+</body>
+</html>

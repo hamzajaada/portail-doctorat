@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Gestion des Campagnes</title>
+</head>
+<body>
+<section>
+    <script>document.getElementById('page-title').innerText = 'Campagnes d\'inscription';</script>
+
+    <div class="card-modern p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold m-0">Liste des campagnes</h5>
+            <a th:href="@{/admin/campagnes/nouvelle}" class="btn btn-primary"><i class="fa-solid fa-plus me-2"></i>Nouvelle Campagne</a>
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" role="alert" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" role="alert" th:text="${errorMessage}"></div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Année Universitaire</th>
+                        <th>Date Ouverture</th>
+                        <th>Date Fermeture</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(campagnes)}">
+                        <td colspan="5" class="text-center text-muted py-4">Aucune campagne trouvée.</td>
+                    </tr>
+                    <tr th:each="campagne : ${campagnes}">
+                        <td class="fw-bold" th:text="${campagne.anneeUniv}"></td>
+                        <td th:text="${#temporals.format(campagne.dateOuverture, 'dd/MM/yyyy')}"></td>
+                        <td th:text="${#temporals.format(campagne.dateFermeture, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span class="badge bg-success" th:if="${campagne.active}">ACTIVE</span>
+                            <span class="badge bg-secondary" th:unless="${campagne.active}">FERMÉE</span>
+                        </td>
+                        <td class="text-end">
+                            <form th:action="@{'/admin/campagnes/' + ${campagne.id} + '/toggle'}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm" th:classappend="${campagne.active} ? 'btn-outline-secondary' : 'btn-outline-success'" 
+                                        th:title="${campagne.active} ? 'Désactiver' : 'Activer'">
+                                    <i class="fa-solid fa-power-off"></i>
+                                </button>
+                            </form>
+                            <a th:href="@{'/admin/campagnes/' + ${campagne.id} + '/edit'}" class="btn btn-sm btn-outline-primary ms-1" title="Modifier">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form th:action="@{'/admin/campagnes/' + ${campagne.id} + '/supprimer'}" method="post" class="d-inline ms-1" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette campagne ?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>
