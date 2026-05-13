@@ -20,6 +20,10 @@ public class Document {
     @JoinColumn(name = "dossier_inscription_id")
     private DossierInscription dossierInscription;
 
+    @ManyToOne
+    @JoinColumn(name = "demande_soutenance_id")
+    private DemandeSoutenance demandeSoutenance;
+
     private String nomFichier;
     private String typeDocument;
     private String cheminFichier;

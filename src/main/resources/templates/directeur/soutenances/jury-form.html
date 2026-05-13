@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Proposition de Jury - Portail Doctorat</title>
+</head>
+<body>
+<section class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary">
+                <i class="fa-solid fa-users me-2"></i>Proposition de Jury
+            </h2>
+            <p class="text-muted" th:text="'Pour le doctorant ' + ${demande.doctorant.user.nom} + ' ' + ${demande.doctorant.user.prenom}">Détails</p>
+        </div>
+    </div>
+
+    <div th:if="${errorMessage != null}" class="alert alert-danger mb-4">
+        <i class="fa-solid fa-circle-xmark me-2"></i><span th:text="${errorMessage}">Erreur</span>
+    </div>
+    
+    <div th:if="${#fields.hasErrors('${juryDTO}')}" class="alert alert-danger mb-4">
+        <h5 class="alert-heading"><i class="fa-solid fa-triangle-exclamation me-2"></i>Erreurs de validation</h5>
+        <ul class="mb-0">
+            <li th:each="err : ${#fields.errors('juryDTO')}" th:text="${err}">Erreur</li>
+        </ul>
+    </div>
+
+    <div class="row">
+        <!-- Formulaire -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form th:action="${juryId == null ? '/directeur/soutenances/' + demande.oid + '/jury/nouveau' : '/directeur/soutenances/' + demande.oid + '/jury/modifier'}" th:object="${juryDTO}" method="post">
+                        
+                        <input type="hidden" th:field="*{demandeId}" />
+                        <input type="hidden" th:if="${juryId != null}" name="juryId" th:value="${juryId}" />
+
+                        <div class="alert alert-info border-0 mb-4">
+                            <i class="fa-solid fa-circle-info me-2"></i><strong>Règle :</strong> Les 3 membres du jury doivent être distincts.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Président du Jury <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{president}" class="form-control" placeholder="Nom complet et établissement" required>
+                            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('president')}" th:errors="*{president}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Premier Rapporteur <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{rapporteur1}" class="form-control" placeholder="Nom complet et établissement" required>
+                            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('rapporteur1')}" th:errors="*{rapporteur1}"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Deuxième Rapporteur <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{rapporteur2}" class="form-control" placeholder="Nom complet et établissement" required>
+                            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('rapporteur2')}" th:errors="*{rapporteur2}"></div>
+                        </div>
+
+                        <div class="text-end">
+                            <a th:href="@{/directeur/soutenances}" class="btn btn-light me-2">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-save me-2"></i>Enregistrer le jury
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info -->
+        <div class="col-md-4">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Récapitulatif Prérequis</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i><span th:text="${demande.nbPublications} + ' Publications'"></span></li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i><span th:text="${demande.nbConferences} + ' Conférences'"></span></li>
+                        <li><i class="fa-solid fa-check text-success me-2"></i><span th:text="${demande.heuresFormation} + ' Heures'"></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

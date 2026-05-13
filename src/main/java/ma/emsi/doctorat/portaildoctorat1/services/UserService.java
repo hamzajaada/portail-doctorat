@@ -24,11 +24,32 @@ public class UserService {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     public UserDTO createUser(UserDTO userDTO) {
-        if (userRepository.findByEmail(userDTO.email()).isPresent()) {
+        if (userDTO.password() == null || userDTO.password().length() < 6) {
+            throw new IllegalArgumentException("Le mot de passe est obligatoire et doit contenir au moins 6 caractères");
+        }
+        
+        String email = userDTO.email().trim().toLowerCase();
+        if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Un utilisateur avec cet email existe déjà");
         }
+        
         User user = mapToEntity(userDTO);
+        user.setEmail(email);
         User savedUser = userRepository.save(user);
+        
+        // Créer automatiquement le profil associé selon le rôle
+        if (savedUser.getRole() == ma.emsi.doctorat.portaildoctorat1.entities.Role.DOCTORANT) {
+            ma.emsi.doctorat.portaildoctorat1.entities.Doctorant doctorant = new ma.emsi.doctorat.portaildoctorat1.entities.Doctorant();
+            doctorant.setUser(savedUser);
+            doctorant.setAnneeThese(1);
+            doctorant.setDatePremiereInscription(java.time.LocalDate.now());
+            doctorantRepository.save(doctorant);
+        } else if (savedUser.getRole() == ma.emsi.doctorat.portaildoctorat1.entities.Role.DIRECTEUR) {
+            ma.emsi.doctorat.portaildoctorat1.entities.Directeur directeur = new ma.emsi.doctorat.portaildoctorat1.entities.Directeur();
+            directeur.setUser(savedUser);
+            directeurRepository.save(directeur);
+        }
+        
         return mapToDTO(savedUser);
     }
 
@@ -50,13 +71,14 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'id : " + id));
 
-        if (!user.getEmail().equals(userDTO.email()) && userRepository.findByEmail(userDTO.email()).isPresent()) {
+        String newEmail = userDTO.email().trim().toLowerCase();
+        if (!user.getEmail().equals(newEmail) && userRepository.findByEmail(newEmail).isPresent()) {
             throw new IllegalArgumentException("Cet email est déjà utilisé par un autre utilisateur");
         }
 
         user.setNom(userDTO.nom());
         user.setPrenom(userDTO.prenom());
-        user.setEmail(userDTO.email());
+        user.setEmail(newEmail);
         user.setRole(userDTO.role());
         if (userDTO.password() != null && !userDTO.password().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userDTO.password()));

@@ -13,18 +13,33 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final ma.emsi.doctorat.portaildoctorat1.repositories.DoctorantRepository doctorantRepository;
     private final PasswordEncoder passwordEncoder;
 
     public void registerDoctorant(UserDTO userDTO) {
-        if (userRepository.findByEmail(userDTO.email()).isPresent()) {
+        String email = userDTO.email().trim().toLowerCase();
+        System.out.println("Tentative d'inscription pour : " + email);
+        
+        if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Un compte avec cet email existe déjà.");
         }
-        User doctorant = new User();
-        doctorant.setNom(userDTO.nom());
-        doctorant.setPrenom(userDTO.prenom());
-        doctorant.setEmail(userDTO.email());
-        doctorant.setPassword(passwordEncoder.encode(userDTO.password()));
-        doctorant.setRole(Role.DOCTORANT);
-        userRepository.save(doctorant);
+        
+        User user = new User();
+        user.setNom(userDTO.nom());
+        user.setPrenom(userDTO.prenom());
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(userDTO.password()));
+        user.setRole(Role.DOCTORANT);
+        
+        User savedUser = userRepository.save(user);
+        System.out.println("Utilisateur sauvegardé avec ID : " + savedUser.getOid());
+
+        // Créer automatiquement le profil Doctorant associé
+        ma.emsi.doctorat.portaildoctorat1.entities.Doctorant doctorant = new ma.emsi.doctorat.portaildoctorat1.entities.Doctorant();
+        doctorant.setUser(savedUser);
+        doctorant.setAnneeThese(1); // Première année par défaut
+        doctorant.setDatePremiereInscription(java.time.LocalDate.now());
+        doctorantRepository.save(doctorant);
+        System.out.println("Profil Doctorant créé avec succès.");
     }
 }

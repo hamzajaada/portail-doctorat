@@ -21,6 +21,32 @@ public class FileStorageService {
     @Value("${app.upload.dir:./uploads}")
     private String uploadDir;
 
+    public String storeFileCustomFolder(MultipartFile file, String folderName) {
+        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        
+        String lowerCaseName = originalFilename.toLowerCase();
+        if(!lowerCaseName.endsWith(".pdf") && !lowerCaseName.endsWith(".jpg") && !lowerCaseName.endsWith(".jpeg") && !lowerCaseName.endsWith(".png")) {
+            throw new RuntimeException("Seuls les fichiers PDF et images (JPG/PNG) sont autorisés.");
+        }
+        
+        if(file.getSize() > 5 * 1024 * 1024) {
+            throw new RuntimeException("La taille du fichier ne doit pas dépasser 5MB.");
+        }
+
+        try {
+            Path targetLocation = Paths.get(uploadDir).resolve(folderName);
+            Files.createDirectories(targetLocation);
+            
+            String newFilename = UUID.randomUUID().toString() + "_" + originalFilename;
+            Path filePath = targetLocation.resolve(newFilename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+            return folderName + "/" + newFilename;
+        } catch (IOException ex) {
+            throw new RuntimeException("Impossible de stocker le fichier " + originalFilename + ". Veuillez réessayer!", ex);
+        }
+    }
+
     public String storeFile(MultipartFile file, Long dossierId) {
         String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
         

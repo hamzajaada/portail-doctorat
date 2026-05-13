@@ -5,7 +5,7 @@ import ma.emsi.doctorat.portaildoctorat1.dto.JuryDTO;
 import ma.emsi.doctorat.portaildoctorat1.entities.DemandeSoutenance;
 import ma.emsi.doctorat.portaildoctorat1.entities.Directeur;
 import ma.emsi.doctorat.portaildoctorat1.entities.Jury;
-import ma.emsi.doctorat.portaildoctorat1.exception.ResourceNotFoundException;
+import ma.emsi.doctorat.portaildoctorat1.entities.StatutSoutenance;
 import ma.emsi.doctorat.portaildoctorat1.repositories.DemandeSoutenanceRepository;
 import ma.emsi.doctorat.portaildoctorat1.repositories.DirecteurRepository;
 import ma.emsi.doctorat.portaildoctorat1.repositories.JuryRepository;
@@ -20,69 +20,66 @@ import java.util.stream.Collectors;
 @Transactional
 public class JuryService {
 
-    private final JuryRepository juryRepository;
     private final DemandeSoutenanceRepository demandeRepository;
+    private final JuryRepository juryRepository;
     private final DirecteurRepository directeurRepository;
+    private final NotificationService notificationService;
+    private final ma.emsi.doctorat.portaildoctorat1.repositories.DossierInscriptionRepository dossierRepository;
 
-    public JuryDTO create(JuryDTO dto) {
-        DemandeSoutenance demande = demandeRepository.findById(dto.demandeSoutenanceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Demande de soutenance introuvable"));
-        Directeur proposePar = directeurRepository.findById(dto.proposeParId())
-                .orElseThrow(() -> new ResourceNotFoundException("Directeur introuvable"));
+    public List<DemandeSoutenance> getDemandesEnAttentePourDirecteur(Long directeurId) {
+        Directeur directeur = directeurRepository.findById(directeurId)
+                .orElseThrow(() -> new RuntimeException("Directeur introuvable"));
+                
+        List<DemandeSoutenance> toutes = demandeRepository.findByStatut(StatutSoutenance.PREREQUIS_VALIDES);
+        return toutes.stream()
+                .filter(d -> {
+                    return dossierRepository.findByDoctorant(d.getDoctorant()).stream()
+                            .anyMatch(dossier -> dossier.getDirecteur().getOid().equals(directeurId));
+                })
+                .collect(Collectors.toList());
+    }
 
+    public Jury proposerJury(JuryDTO dto, Long directeurId) {
+        Directeur directeur = directeurRepository.findById(directeurId)
+                .orElseThrow(() -> new RuntimeException("Directeur introuvable"));
+                
+        DemandeSoutenance demande = demandeRepository.findById(dto.demandeId())
+                .orElseThrow(() -> new RuntimeException("Demande introuvable"));
+                
+        if (juryRepository.existsByDemandeSoutenance_Oid(dto.demandeId())) {
+            throw new RuntimeException("Un jury a déjà été proposé pour cette demande");
+        }
+        
         Jury jury = new Jury();
         jury.setDemandeSoutenance(demande);
-        jury.setProposePar(proposePar);
+        jury.setProposePar(directeur);
         jury.setPresident(dto.president());
         jury.setRapporteur1(dto.rapporteur1());
         jury.setRapporteur2(dto.rapporteur2());
-        jury.setExaminateur1(dto.examinateur1());
-        jury.setExaminateur2(dto.examinateur2());
-
-        return mapToDTO(juryRepository.save(jury));
+        juryRepository.save(jury);
+        
+        demande.setStatut(StatutSoutenance.JURY_PROPOSE);
+        demandeRepository.save(demande);
+        
+        notificationService.creerNotificationPourRole("ADMIN", 
+            "Un jury a été proposé pour la soutenance de " + demande.getDoctorant().getUser().getNom(), 
+            "/admin/soutenances/" + demande.getOid());
+            
+        return jury;
     }
 
-    @Transactional(readOnly = true)
-    public JuryDTO getById(Long id) {
-        return mapToDTO(juryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Jury introuvable")));
-    }
-
-    @Transactional(readOnly = true)
-    public List<JuryDTO> getAll() {
-        return juryRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public JuryDTO getByDemandeSoutenanceId(Long demandeId) {
-        Jury jury = juryRepository.findByDemandeSoutenanceId(demandeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Jury introuvable pour cette demande"));
-        return mapToDTO(jury);
-    }
-
-    public JuryDTO update(Long id, JuryDTO dto) {
-        Jury jury = juryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Jury introuvable"));
+    public Jury modifierJury(Long juryId, JuryDTO dto, Long directeurId) {
+        Jury jury = juryRepository.findById(juryId)
+                .orElseThrow(() -> new RuntimeException("Jury introuvable"));
+                
+        if (jury.getDemandeSoutenance().getStatut() != StatutSoutenance.JURY_PROPOSE) {
+            throw new RuntimeException("Impossible de modifier le jury car la soutenance a déjà dépassé l'étape de proposition de jury");
+        }
+        
         jury.setPresident(dto.president());
         jury.setRapporteur1(dto.rapporteur1());
         jury.setRapporteur2(dto.rapporteur2());
-        jury.setExaminateur1(dto.examinateur1());
-        jury.setExaminateur2(dto.examinateur2());
-        return mapToDTO(juryRepository.save(jury));
-    }
-
-    public void delete(Long id) {
-        juryRepository.deleteById(id);
-    }
-
-    private JuryDTO mapToDTO(Jury jury) {
-        return new JuryDTO(
-                jury.getOid(),
-                jury.getDemandeSoutenance() != null ? jury.getDemandeSoutenance().getOid() : null,
-                jury.getProposePar() != null ? jury.getProposePar().getOid() : null,
-                jury.getPresident(),
-                jury.getRapporteur1(),
-                jury.getRapporteur2(),
-                jury.getExaminateur1(),
-                jury.getExaminateur2()
-        );
+        
+        return juryRepository.save(jury);
     }
 }

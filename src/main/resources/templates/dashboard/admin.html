@@ -93,6 +93,13 @@
                             <small class="text-muted">Gérer les demandes</small>
                         </div>
                     </a>
+                    <a href="/admin/soutenances" class="btn btn-outline-info text-start p-3 rounded-3 d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 text-info rounded p-2 me-3"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <div class="fw-bold">Gérer Soutenances</div>
+                            <small class="text-muted">Tableau de bord soutenances</small>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -102,30 +109,45 @@
         // Fetch dashboard data on load
         async function loadDashboardData() {
             try {
-                const doctorants = await apiCall('/doctorants');
-                document.getElementById('count-doctorants').innerText = doctorants.length;
+                console.log("Loading dashboard data...");
+                
+                // Doctorants
+                apiCall('/doctorants').then(data => {
+                    if (data) document.getElementById('count-doctorants').innerText = data.length;
+                }).catch(err => console.error("Error doctorants:", err));
 
-                const dossiers = await apiCall('/dossiers');
-                document.getElementById('count-dossiers').innerText = dossiers.length;
-
-                const soutenances = await apiCall('/demandes-soutenance');
-                document.getElementById('count-soutenances').innerText = soutenances.length;
-
-                try {
-                    const activeCampagne = await apiCall('/campagnes/active');
-                    if (activeCampagne) {
-                        document.getElementById('active-campagne-annee').innerText = activeCampagne.anneeUniv;
+                // Dossiers en attente (SOUMIS ou VALIDE_DIRECTEUR)
+                apiCall('/dossiers').then(data => {
+                    if (data) {
+                        const pending = data.filter(d => d.statut === 'SOUMIS' || d.statut === 'VALIDE_DIRECTEUR');
+                        document.getElementById('count-dossiers').innerText = pending.length;
                     }
-                } catch(e) {
-                    // Ignorer si aucune campagne active
-                }
+                }).catch(err => console.error("Error dossiers:", err));
+
+                // Demandes soutenance
+                apiCall('/demandes-soutenance').then(data => {
+                    if (data) document.getElementById('count-soutenances').innerText = data.length;
+                }).catch(err => console.error("Error soutenances:", err));
+
+                // Campagne active
+                apiCall('/campagnes/active').then(data => {
+                    console.log("Active campaign data:", data);
+                    if (data && data.anneeUniv) {
+                        document.getElementById('active-campagne-annee').innerText = data.anneeUniv;
+                    } else {
+                        document.getElementById('active-campagne-annee').innerText = 'Aucune';
+                    }
+                }).catch(err => {
+                    console.error("Error active campaign:", err);
+                    document.getElementById('active-campagne-annee').innerText = 'Aucune';
+                });
 
             } catch (error) {
-                console.error("Erreur de chargement du dashboard", error);
+                console.error("Erreur globale de chargement du dashboard", error);
             }
         }
         
-        loadDashboardData();
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
     </script>
 </section>
 </body>

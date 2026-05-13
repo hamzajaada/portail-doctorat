@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class WebController {
 
     // Dashboards dédiés
-    @GetMapping({"", "/", "/dashboard/admin"}) public String adminDashboard() { return "dashboard/admin"; }
-    @GetMapping("/dashboard/doctorant") public String doctorantDashboard() { return "dashboard/doctorant"; }
-    @GetMapping("/dashboard/directeur") public String directeurDashboard() { return "dashboard/directeur"; }
+    @GetMapping({"/admin/dashboard", "/ui/dashboard/admin"}) public String adminDashboard() { return "dashboard/admin"; }
+    @GetMapping({"/doctorant/dashboard", "/ui/dashboard/doctorant"}) public String doctorantDashboard() { return "dashboard/doctorant"; }
+    @GetMapping({"/directeur/dashboard", "/ui/dashboard/directeur"}) public String directeurDashboard() { return "dashboard/directeur"; }
 
     // Admin
     @GetMapping("/admin/campagnes") public String adminCampagnes() { return "admin/campagnes-list"; }

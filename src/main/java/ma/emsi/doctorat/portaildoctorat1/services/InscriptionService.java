@@ -35,8 +35,11 @@ public class InscriptionService {
     private final NotificationService notificationService;
 
     public Campagne getCampagneActive() {
-        return campagneRepository.findByActiveTrue()
-                .orElseThrow(() -> new RuntimeException("Aucune campagne active ouverte"));
+        List<Campagne> activeCampagnes = campagneRepository.findByActiveTrue();
+        if (activeCampagnes.isEmpty()) {
+            throw new RuntimeException("Aucune campagne active ouverte");
+        }
+        return activeCampagnes.get(0);
     }
 
     public List<Directeur> getDirecteursDisponibles() {

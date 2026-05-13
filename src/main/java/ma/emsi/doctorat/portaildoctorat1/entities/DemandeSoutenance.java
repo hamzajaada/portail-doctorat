@@ -25,7 +25,9 @@ public class DemandeSoutenance {
     private int nbPublications;
     private int nbConferences;
     private int heuresFormation;
-    private String statut;
+    @Enumerated(EnumType.STRING)
+    private StatutSoutenance statut;
+    private LocalDateTime dateDepot;
     private LocalDateTime dateSoutenance;
     private String lieuSoutenance;
 }

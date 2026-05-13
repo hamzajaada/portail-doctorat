@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface CampagneRepository extends JpaRepository<Campagne, Long> {
-    Optional<Campagne> findByActiveTrue();
+    List<Campagne> findByActiveTrue();
     Optional<Campagne> findByAnneeUniv(String anneeUniv);
     List<Campagne> findAllByOrderByDateOuvertureDesc();
     boolean existsByAnneeUnivAndActiveTrue(String anneeUniv);

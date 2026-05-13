@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Planifier Soutenance - Portail Doctorat</title>
+</head>
+<body>
+<section class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary">
+                <i class="fa-solid fa-calendar-plus me-2"></i>Planifier la soutenance
+            </h2>
+            <p class="text-muted" th:text="'Pour le doctorant ' + ${demande.doctorant.user.nom} + ' ' + ${demande.doctorant.user.prenom}">Détails</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form th:action="@{/admin/soutenances/{id}/planifier(id=${demande.oid})}" th:object="${planificationDTO}" method="post">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Date et Heure <span class="text-danger">*</span></label>
+                            <input type="datetime-local" th:field="*{dateSoutenance}" class="form-control" required>
+                            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('dateSoutenance')}" th:errors="*{dateSoutenance}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Lieu <span class="text-danger">*</span></label>
+                            <input type="text" th:field="*{lieuSoutenance}" class="form-control" placeholder="Ex: Salle de Conférences A" required>
+                            <div class="text-danger small mt-1" th:if="${#fields.hasErrors('lieuSoutenance')}" th:errors="*{lieuSoutenance}"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Informations complémentaires</label>
+                            <textarea th:field="*{informationsComplementaires}" class="form-control" rows="3" placeholder="Notes pour le jury..."></textarea>
+                        </div>
+
+                        <div class="text-end">
+                            <a th:href="@{/admin/soutenances/{id}(id=${demande.oid})}" class="btn btn-light me-2">Annuler</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa-solid fa-save me-2"></i>Confirmer la planification
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4" th:if="${jury != null}">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Rappel du Jury</h6>
+                    <ul class="list-unstyled mb-0 small">
+                        <li class="mb-2"><strong>P:</strong> <span th:text="${jury.president}"></span></li>
+                        <li class="mb-2"><strong>R1:</strong> <span th:text="${jury.rapporteur1}"></span></li>
+                        <li><strong>R2:</strong> <span th:text="${jury.rapporteur2}"></span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

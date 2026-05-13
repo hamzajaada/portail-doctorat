@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Nouvelle Demande de Soutenance - Portail Doctorat</title>
+</head>
+<body>
+<section class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary">
+                <i class="fa-solid fa-graduation-cap me-2"></i>Initier une Demande de Soutenance
+            </h2>
+            <p class="text-muted">Veuillez vérifier les prérequis et soumettre vos documents pour lancer la procédure de soutenance.</p>
+        </div>
+    </div>
+
+    <div th:if="${erreursPre != null}" class="alert alert-danger mb-4">
+        <h5 class="alert-heading"><i class="fa-solid fa-triangle-exclamation me-2"></i>Prérequis non remplis</h5>
+        <ul class="mb-0">
+            <li th:each="err : ${erreursPre}" th:text="${err}">Erreur</li>
+        </ul>
+    </div>
+    
+    <div th:if="${errorMessage != null}" class="alert alert-danger mb-4">
+        <i class="fa-solid fa-circle-xmark me-2"></i><span th:text="${errorMessage}">Erreur</span>
+    </div>
+
+    <form th:action="@{/doctorant/soutenance/nouvelle}" th:object="${prerequisDTO}" method="post" enctype="multipart/form-data">
+        
+        <!-- Section 1 : Prérequis -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>1. Check-list des prérequis</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Condition Requise</th>
+                                <th style="width: 250px;">Votre valeur</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Publications Q1/Q2</strong> (Au moins 2 requises)</td>
+                                <td>
+                                    <input type="number" th:field="*{nbPublications}" class="form-control" min="0" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('nbPublications')}" th:errors="*{nbPublications}"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Conférences</strong> (Au moins 2 requises)</td>
+                                <td>
+                                    <input type="number" th:field="*{nbConferences}" class="form-control" min="0" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('nbConferences')}" th:errors="*{nbConferences}"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Heures de formation</strong> (Au moins 200h requises)</td>
+                                <td>
+                                    <input type="number" th:field="*{heuresFormation}" class="form-control" min="0" required>
+                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('heuresFormation')}" th:errors="*{heuresFormation}"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2 : Documents -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h5 class="fw-bold text-dark"><i class="fa-solid fa-file-pdf text-primary me-2"></i>2. Documents obligatoires (PDF, Max 5MB)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Demande manuscrite <span class="text-danger">*</span></label>
+                        <input type="file" th:field="*{fichierDemande}" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Rapport de thèse <span class="text-danger">*</span></label>
+                        <input type="file" th:field="*{fichierRapportThese}" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Rapport Anti-plagiat <span class="text-danger">*</span></label>
+                        <input type="file" th:field="*{fichierAntiPlagiat}" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Dossier des publications <span class="text-danger">*</span></label>
+                        <input type="file" th:field="*{fichierPublications}" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium">Attestations de formations <span class="text-danger">*</span></label>
+                        <input type="file" th:field="*{fichierAttestations}" class="form-control" accept=".pdf" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mb-5">
+            <a th:href="@{/doctorant/dashboard}" class="btn btn-light me-2">Annuler</a>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('Êtes-vous sûr de vouloir soumettre cette demande ? Assurez-vous que tous les documents sont corrects.')">
+                <i class="fa-solid fa-paper-plane me-2"></i>Soumettre la demande
+            </button>
+        </div>
+    </form>
+</section>
+</body>
+</html>

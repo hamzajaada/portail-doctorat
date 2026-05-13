@@ -14,6 +14,9 @@ public record DossierInscriptionDTO(
         Long campagneId,
         @NotBlank(message = "Le sujet de thèse est obligatoire")
         String sujetThese,
+        String doctorantNom,
+        String doctorantPrenom,
+        String doctorantEmail,
         String statut,
         LocalDateTime dateDepot
 ) {

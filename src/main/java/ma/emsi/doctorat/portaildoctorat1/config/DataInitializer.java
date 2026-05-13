@@ -1,12 +1,8 @@
 package ma.emsi.doctorat.portaildoctorat1.config;
 
 import lombok.RequiredArgsConstructor;
-import ma.emsi.doctorat.portaildoctorat1.entities.Directeur;
-import ma.emsi.doctorat.portaildoctorat1.entities.Doctorant;
 import ma.emsi.doctorat.portaildoctorat1.entities.Role;
 import ma.emsi.doctorat.portaildoctorat1.entities.User;
-import ma.emsi.doctorat.portaildoctorat1.repositories.DirecteurRepository;
-import ma.emsi.doctorat.portaildoctorat1.repositories.DoctorantRepository;
 import ma.emsi.doctorat.portaildoctorat1.repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,11 +10,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+
+// CommandLineRunner il sait qu'il a l'ordre strict d'appuyer sur son bouton
+// run() au démarrage
+
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
-    private final DirecteurRepository directeurRepository;
-    private final DoctorantRepository doctorantRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -34,33 +32,22 @@ public class DataInitializer implements CommandLineRunner {
             userRepository.save(admin);
 
             // Directeur
-            User directeurUser = new User();
-            directeurUser.setNom("Directeur");
-            directeurUser.setPrenom("Thèse");
-            directeurUser.setEmail("directeur@portail.ma");
-            directeurUser.setPassword(passwordEncoder.encode("dir123"));
-            directeurUser.setRole(Role.DIRECTEUR);
-            userRepository.save(directeurUser);
-            
-            Directeur directeur = new Directeur();
-            directeur.setUser(directeurUser);
-            directeur.setGrade("Professeur de l'Enseignement Supérieur");
-            directeur.setDepartement("Informatique");
-            directeurRepository.save(directeur);
+            User directeur = new User();
+            directeur.setNom("Directeur");
+            directeur.setPrenom("Thèse");
+            directeur.setEmail("directeur@portail.ma");
+            directeur.setPassword(passwordEncoder.encode("dir123"));
+            directeur.setRole(Role.DIRECTEUR);
+            userRepository.save(directeur);
 
             // Doctorant
-            User doctorantUser = new User();
-            doctorantUser.setNom("Doctorant");
-            doctorantUser.setPrenom("Chercheur");
-            doctorantUser.setEmail("doctorant@portail.ma");
-            doctorantUser.setPassword(passwordEncoder.encode("doc123"));
-            doctorantUser.setRole(Role.DOCTORANT);
-            userRepository.save(doctorantUser);
-            
-            Doctorant doctorant = new Doctorant();
-            doctorant.setUser(doctorantUser);
-            doctorant.setDatePremiereInscription(java.time.LocalDate.now());
-            doctorantRepository.save(doctorant);
+            User doctorant = new User();
+            doctorant.setNom("Doctorant");
+            doctorant.setPrenom("Chercheur");
+            doctorant.setEmail("doctorant@portail.ma");
+            doctorant.setPassword(passwordEncoder.encode("doc123"));
+            doctorant.setRole(Role.DOCTORANT);
+            userRepository.save(doctorant);
 
             System.out.println("Comptes de test générés avec succès !");
         }

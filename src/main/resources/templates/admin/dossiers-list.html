@@ -18,7 +18,8 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Doctorant ID</th>
+                    <th>Doctorant</th>
+                    <th>Email</th>
                     <th>Directeur ID</th>
                     <th>Campagne ID</th>
                     <th>Sujet de Thèse</th>
@@ -29,7 +30,7 @@
             </thead>
             <tbody id="dossiers-table-body">
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
+                    <td colspan="8" class="text-center py-4 text-muted">
                         <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div> Chargement...
                     </td>
                 </tr>
@@ -55,15 +56,24 @@
                 tbody.innerHTML = '';
                 
                 if(!dossiers || dossiers.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Aucun dossier trouvé.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">Aucun dossier trouvé.</td></tr>';
                     return;
                 }
 
                 dossiers.forEach(d => {
                     const dateFmt = d.dateDepot ? new Date(d.dateDepot).toLocaleDateString('fr-FR') : '-';
+                    const initials = (d.doctorantPrenom?.charAt(0) || '') + (d.doctorantNom?.charAt(0) || '');
                     tbody.innerHTML += `
                         <tr class="align-middle">
-                            <td class="fw-medium">#${d.doctorantId || '?'}</td>
+                            <td class="fw-medium">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 35px; height: 35px;">
+                                        ${initials.toUpperCase() || '?'}
+                                    </div>
+                                    ${d.doctorantNom || ''} ${d.doctorantPrenom || 'Inconnu'}
+                                </div>
+                            </td>
+                            <td>${d.doctorantEmail || '-'}</td>
                             <td>#${d.directeurId || '?'}</td>
                             <td>${d.campagneId || '?'}</td>
                             <td class="text-truncate" style="max-width: 200px;" title="${d.sujetThese || ''}">${d.sujetThese || '-'}</td>
@@ -87,7 +97,7 @@
                     `;
                 });
             } catch (error) {
-                document.getElementById('dossiers-table-body').innerHTML = `<tr><td colspan="7" class="text-center text-danger">Erreur de chargement</td></tr>`;
+                document.getElementById('dossiers-table-body').innerHTML = `<tr><td colspan="8" class="text-center text-danger">Erreur de chargement</td></tr>`;
             }
         }
 

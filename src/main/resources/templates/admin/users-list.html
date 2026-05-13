@@ -5,11 +5,11 @@
 </head>
 <body>
 <section>
-    <script>document.getElementById('page-title').innerText = 'Gestion des Utilisateurs';</script>
+    <script>document.getElementById('page-title').innerText = 'Gestion des Doctorants';</script>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <p class="text-muted mb-0">Administrez l'accès au portail pour tous les rôles.</p>
+            <p class="text-muted mb-0">Administrez l'accès au portail pour les doctorants.</p>
         </div>
         <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#userModal" onclick="resetForm()">
             <i class="fa-solid fa-user-plus me-2"></i>Nouvel Utilisateur
@@ -41,7 +41,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Nouvel Utilisateur</h5>
+                    <h5 class="modal-title fw-bold" id="modalTitle">Nouveau Doctorant</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -72,9 +72,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-medium text-muted small text-uppercase">Rôle</label>
                             <select class="form-select bg-light" id="role" required>
-                                <option value="DOCTORANT">Doctorant</option>
-                                <option value="DIRECTEUR">Directeur de thèse</option>
-                                <option value="ADMIN">Administrateur</option>
+                                <option value="DOCTORANT" selected>Doctorant</option>
                             </select>
                         </div>
                     </form>
@@ -88,13 +86,13 @@
     </div>
 
     <script>
-        const modal = new bootstrap.Modal(document.getElementById('userModal'));
+        let modal;
 
         function resetForm() {
             document.getElementById('userForm').reset();
             document.getElementById('userId').value = '';
             document.getElementById('passwordGroup').style.display = 'block';
-            document.getElementById('modalTitle').innerText = 'Nouvel Utilisateur';
+            document.getElementById('modalTitle').innerText = 'Nouveau Doctorant';
         }
 
         function getRoleBadge(role) {
@@ -107,28 +105,34 @@
         }
 
         async function loadUsers() {
+            console.log("Démarrage de loadUsers...");
+            const tbody = document.getElementById('users-table-body');
+            
             try {
                 const users = await apiCall('/users');
-                const tbody = document.getElementById('users-table-body');
-                tbody.innerHTML = '';
+                console.log("Utilisateurs reçus :", users);
                 
-                if(!users || users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Aucun utilisateur trouvé.</td></tr>';
+                const doctorants = users.filter(u => u.role === 'DOCTORANT');
+
+                if(!doctorants || doctorants.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Aucun doctorant trouvé.</td></tr>';
                     return;
                 }
 
-                users.forEach(u => {
-                    tbody.innerHTML += `
+                let html = '';
+                doctorants.forEach(u => {
+                    const initials = (u.prenom?.charAt(0) || '') + (u.nom?.charAt(0) || '');
+                    html += `
                         <tr class="align-middle">
                             <td class="fw-medium">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-light rounded-circle text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 35px; height: 35px;">
-                                        ${u.prenom.charAt(0)}${u.nom.charAt(0)}
+                                        ${initials.toUpperCase()}
                                     </div>
-                                    ${u.nom} ${u.prenom}
+                                    ${u.nom || ''} ${u.prenom || ''}
                                 </div>
                             </td>
-                            <td>${u.email}</td>
+                            <td>${u.email || ''}</td>
                             <td>${getRoleBadge(u.role)}</td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-light me-2 text-primary" onclick="editUser(${u.id})" title="Modifier"><i class="fa-solid fa-pen"></i></button>
@@ -137,8 +141,14 @@
                         </tr>
                     `;
                 });
+                tbody.innerHTML = html;
+                console.log("Tableau mis à jour.");
             } catch (error) {
-                document.getElementById('users-table-body').innerHTML = `<tr><td colspan="4" class="text-center text-danger">Erreur de chargement</td></tr>`;
+                console.error("Erreur dans loadUsers :", error);
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-danger">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                    Erreur de chargement : ${error.message}
+                </td></tr>`;
             }
         }
 
@@ -183,7 +193,7 @@
                 document.getElementById('email').value = u.email;
                 document.getElementById('role').value = u.role;
                 document.getElementById('passwordGroup').style.display = 'none'; // Pas de changement de mot de passe direct ici
-                document.getElementById('modalTitle').innerText = 'Modifier Utilisateur';
+                document.getElementById('modalTitle').innerText = 'Modifier Doctorant';
                 modal.show();
             } catch (e) {}
         }
@@ -208,7 +218,10 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadUsers);
+        document.addEventListener('DOMContentLoaded', () => {
+            modal = new bootstrap.Modal(document.getElementById('userModal'));
+            loadUsers();
+        });
     </script>
 </section>
 </body>

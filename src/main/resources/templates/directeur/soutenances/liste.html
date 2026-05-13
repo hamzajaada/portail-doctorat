@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section})}">
+<head>
+    <title>Soutenances en attente - Portail Doctorat</title>
+</head>
+<body>
+<section class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-primary">
+                <i class="fa-solid fa-users me-2"></i>Soutenances (Validation Jury)
+            </h2>
+            <p class="text-muted">Gérez les propositions de jury pour vos doctorants dont les prérequis ont été validés.</p>
+        </div>
+    </div>
+
+    <div th:if="${successMessage != null}" class="alert alert-success mb-4">
+        <i class="fa-solid fa-circle-check me-2"></i><span th:text="${successMessage}">Succès</span>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Doctorant</th>
+                            <th>Publications</th>
+                            <th>Conférences</th>
+                            <th>Statut</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${demandes.empty}">
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                <i class="fa-solid fa-inbox fa-2x mb-3 text-light"></i><br>
+                                Aucune demande en attente de proposition de jury.
+                            </td>
+                        </tr>
+                        <tr th:each="demande : ${demandes}">
+                            <td class="ps-4 fw-medium text-dark" th:text="${demande.doctorant.user.nom + ' ' + demande.doctorant.user.prenom}">Nom</td>
+                            <td th:text="${demande.nbPublications}">0</td>
+                            <td th:text="${demande.nbConferences}">0</td>
+                            <td>
+                                <span class="badge bg-warning text-dark" th:if="${demande.statut.name() == 'PREREQUIS_VALIDES'}">Prérequis Validés</span>
+                                <span class="badge bg-info text-dark" th:if="${demande.statut.name() == 'JURY_PROPOSE'}">Jury Proposé</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a th:if="${demande.statut.name() == 'PREREQUIS_VALIDES'}" th:href="@{/directeur/soutenances/{id}/jury/nouveau(id=${demande.oid})}" class="btn btn-sm btn-primary">
+                                    Proposer Jury
+                                </a>
+                                <a th:if="${demande.statut.name() == 'JURY_PROPOSE'}" th:href="@{/directeur/soutenances/{id}/jury/modifier(id=${demande.oid})}" class="btn btn-sm btn-outline-primary">
+                                    Modifier Jury
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -18,6 +18,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Doctorant</th>
+                        <th>Email</th>
                         <th>Directeur</th>
                         <th>Campagne</th>
                         <th>Sujet</th>
@@ -27,10 +28,11 @@
                 </thead>
                 <tbody>
                     <tr th:if="${#lists.isEmpty(dossiers)}">
-                        <td colspan="6" class="text-center text-muted py-4">Aucun dossier trouvé.</td>
+                        <td colspan="7" class="text-center text-muted py-4">Aucun dossier trouvé.</td>
                     </tr>
                     <tr th:each="dossier : ${dossiers}">
                         <td class="fw-semibold" th:text="${dossier.doctorant.user.nom + ' ' + dossier.doctorant.user.prenom}"></td>
+                        <td th:text="${dossier.doctorant.user.email}"></td>
                         <td th:text="${dossier.directeur.user.nom + ' ' + dossier.directeur.user.prenom}"></td>
                         <td th:text="${dossier.campagne.anneeUniv}"></td>
                         <td th:text="${#strings.abbreviate(dossier.sujetThese, 40)}"></td>

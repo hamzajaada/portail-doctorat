@@ -1,0 +1,44 @@
+{
+  "info": {
+    "name": "Portail Doctorat - Milestone 3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Doctorant - Soutenance",
+      "item": [
+        {
+          "name": "Initier demande",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:8081/doctorant/soutenance/nouvelle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Directeur - Jury",
+      "item": [
+        {
+          "name": "Liste",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8081/directeur/soutenances"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Soutenances",
+      "item": [
+        {
+          "name": "Valider",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:8081/admin/soutenances/1/valider-prerequis"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -44,7 +44,7 @@ public class InscriptionController {
             return "doctorant/inscription/form";
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-            return "redirect:/ui/dashboard/doctorant";
+            return "redirect:/doctorant/dashboard";
         }
     }
 
@@ -70,7 +70,7 @@ public class InscriptionController {
         DossierInscription dossier = dossierRepository.findById(id).orElseThrow();
         Doctorant doctorant = doctorantRepository.findByUser_Email(userDetails.getUsername()).orElseThrow();
         if(!dossier.getDoctorant().getOid().equals(doctorant.getOid())) {
-            return "redirect:/ui/dashboard/doctorant";
+            return "redirect:/doctorant/dashboard";
         }
         List<Document> documents = documentRepository.findByDossierInscription(dossier);
         model.addAttribute("dossier", dossier);
@@ -98,6 +98,6 @@ public class InscriptionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/ui/dashboard/doctorant";
+        return "redirect:/doctorant/dashboard";
     }
 }

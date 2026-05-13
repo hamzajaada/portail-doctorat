@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,7 +63,7 @@ class InscriptionServiceTest {
     void testSoumissionAvecCampagneActive() {
         DossierDTO dto = new DossierDTO("Sujet AI", 1L, 1L);
 
-        when(campagneRepository.findByActiveTrue()).thenReturn(Optional.of(activeCampagne));
+        when(campagneRepository.findByActiveTrue()).thenReturn(List.of(activeCampagne));
         when(doctorantRepository.findById(1L)).thenReturn(Optional.of(doctorant));
         when(dossierRepository.findByDoctorantAndCampagne(doctorant, activeCampagne)).thenReturn(Optional.empty());
         when(directeurRepository.findById(1L)).thenReturn(Optional.of(directeur));
@@ -78,7 +79,7 @@ class InscriptionServiceTest {
     @Test
     void testSoumissionSansCampagneActive_leveException() {
         DossierDTO dto = new DossierDTO("Sujet AI", 1L, 1L);
-        when(campagneRepository.findByActiveTrue()).thenReturn(Optional.empty());
+        when(campagneRepository.findByActiveTrue()).thenReturn(List.of());
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
             inscriptionService.soumettreInscription(dto, 1L);
@@ -92,7 +93,7 @@ class InscriptionServiceTest {
         doctorant.setDatePremiereInscription(LocalDate.now().minusYears(4)); // > 3 ans
         DossierDTO dto = new DossierDTO("Sujet AI", 1L, 1L);
 
-        when(campagneRepository.findByActiveTrue()).thenReturn(Optional.of(activeCampagne));
+        when(campagneRepository.findByActiveTrue()).thenReturn(List.of(activeCampagne));
         when(doctorantRepository.findById(1L)).thenReturn(Optional.of(doctorant));
         when(dossierRepository.findByDoctorantAndCampagne(doctorant, activeCampagne)).thenReturn(Optional.empty());
 
@@ -107,7 +108,7 @@ class InscriptionServiceTest {
     void testSoumissionDoublonMemeCampagne_leveException() {
         DossierDTO dto = new DossierDTO("Sujet AI", 1L, 1L);
 
-        when(campagneRepository.findByActiveTrue()).thenReturn(Optional.of(activeCampagne));
+        when(campagneRepository.findByActiveTrue()).thenReturn(List.of(activeCampagne));
         when(doctorantRepository.findById(1L)).thenReturn(Optional.of(doctorant));
         when(dossierRepository.findByDoctorantAndCampagne(doctorant, activeCampagne)).thenReturn(Optional.of(new DossierInscription()));
 

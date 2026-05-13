@@ -95,12 +95,22 @@ public class DossierInscriptionService {
     }
 
     private DossierInscriptionDTO mapToDTO(DossierInscription dossier) {
+        String nom = null, prenom = null, email = null;
+        if (dossier.getDoctorant() != null && dossier.getDoctorant().getUser() != null) {
+            nom = dossier.getDoctorant().getUser().getNom();
+            prenom = dossier.getDoctorant().getUser().getPrenom();
+            email = dossier.getDoctorant().getUser().getEmail();
+        }
+
         return new DossierInscriptionDTO(
                 dossier.getOid(),
                 dossier.getDoctorant() != null ? dossier.getDoctorant().getOid() : null,
                 dossier.getDirecteur() != null ? dossier.getDirecteur().getOid() : null,
                 dossier.getCampagne() != null ? dossier.getCampagne().getOid() : null,
                 dossier.getSujetThese(),
+                nom,
+                prenom,
+                email,
                 dossier.getStatut() != null ? dossier.getStatut().name() : null,
                 dossier.getDateDepot()
         );

@@ -22,7 +22,7 @@ public class CampagneService {
 
     public CampagneDTO createCampagne(CampagneDTO dto) {
         if (dto.active() != null && dto.active()) {
-            if (campagneRepository.findByActiveTrue().isPresent()) {
+            if (!campagneRepository.findByActiveTrue().isEmpty()) {
                 throw new RuntimeException("Il existe déjà une campagne active. Désactivez-la d'abord.");
             }
         }

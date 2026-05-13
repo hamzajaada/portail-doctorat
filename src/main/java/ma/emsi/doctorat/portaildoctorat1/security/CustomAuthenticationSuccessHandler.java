@@ -21,13 +21,13 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
         for (GrantedAuthority authority : authorities) {
             if (authority.getAuthority().equals("ROLE_ADMIN")) {
-                redirectUrl = "/ui/dashboard/admin";
+                redirectUrl = "/admin/dashboard";
                 break;
             } else if (authority.getAuthority().equals("ROLE_DIRECTEUR")) {
-                redirectUrl = "/ui/dashboard/directeur";
+                redirectUrl = "/directeur/dashboard";
                 break;
             } else if (authority.getAuthority().equals("ROLE_DOCTORANT")) {
-                redirectUrl = "/ui/dashboard/doctorant";
+                redirectUrl = "/doctorant/dashboard";
                 break;
             }
         }

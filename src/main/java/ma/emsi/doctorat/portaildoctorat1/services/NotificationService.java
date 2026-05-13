@@ -56,4 +56,28 @@ public class NotificationService {
             notificationRepository.save(notification);
         }
     }
+
+    public void creerNotificationPourRole(String roleName, String message, String url) {
+        Role role = Role.valueOf(roleName);
+        List<User> users = userRepository.findAll().stream().filter(u -> u.getRole() == role).toList();
+        for (User user : users) {
+            Notification notification = new Notification();
+            notification.setDestinataire(user);
+            notification.setMessage(message + (url != null ? " (URL: " + url + ")" : ""));
+            notification.setLu(false);
+            notification.setDateCreation(LocalDateTime.now());
+            notificationRepository.save(notification);
+        }
+    }
+
+    public void creerNotification(Long userId, String message, String url) {
+        userRepository.findById(userId).ifPresent(user -> {
+            Notification notification = new Notification();
+            notification.setDestinataire(user);
+            notification.setMessage(message + (url != null ? " (URL: " + url + ")" : ""));
+            notification.setLu(false);
+            notification.setDateCreation(LocalDateTime.now());
+            notificationRepository.save(notification);
+        });
+    }
 }
